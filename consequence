@@ -1,0 +1,45 @@
+#!/bin/bash
+c=$1
+p=$2
+chr=$c
+
+if [[ ! -z "$(echo $c | grep rs)" ]]; then
+## rsid
+read c p <<< $(/home/agilly/scripts/rsid.to.pos.b38.sh $c| sed 's/chr//;s/:/ /')
+fi
+
+chr=$c
+
+af=$(bcftools query -f'%AF' -r chr${c}:${p}-${p} /storage/sanger/projects/helic/t144_helic_15x/analysis/HA/release/chr$chr.vcf.gz)
+read ref alt <<< $(tabix /storage/sanger/projects/helic/t144_helic_15x/analysis/HA/release/chr$chr.vcf.gz chr${c}:${p}-${p} | cut -f4,5)
+
+if [ -z "$alt" ]; then
+af=$(bcftools query -f'%AF' -r chr${c}:${p}-${p} /storage/sanger/projects/helic/t144_helic_15x/analysis/HP/release/chr$chr.reheaded.vcf.gz)
+read ref alt <<< $(tabix /storage/sanger/projects/helic/t144_helic_15x/analysis/HP/release/chr$chr.reheaded.vcf.gz chr${c}:${p}-${p} | cut -f4,5)
+fi
+
+#echo $af
+#echo | perl -e 'print('$af' > 0.5?1:0)'
+#af=0.4
+
+#if [ "$(echo | perl -e 'print('$af' > 0.5?1:0)')" == 1 ]; then
+#t=$alt
+#alt=$ref
+#ref=$t
+#fi
+
+#echo $c $p $alt
+
+
+
+vep=$(wget -O- -q "http://rest.ensembl.org/vep/human/region/${c}:${p}-${p}:1/$alt?content-type=application/json")
+
+echo most_severe_consequence $(echo $vep | jq -r '.[].most_severe_consequence')
+
+echo $vep | jq -r '.[].transcript_consequences[] | .gene_id + " " + .gene_symbol' | sort -u | while read ensg sym; do
+canonical=$(wget -q -O- "http://rest.ensembl.org/lookup/id/${ensg}?expand=1;content-type=application/json" | jq -r '.Transcript[] | select(.is_canonical == 1)| .id')
+echo canonical $sym $canonical $( echo $vep | jq -r '.[].transcript_consequences[] | select(.transcript_id=="'$canonical'").consequence_terms[]' | tr '\n' ',' | sed 's/,$/\n/')
+done
+
+
+#wget -O- -q "http://rest.ensembl.org/vep/human/region/${c}:${p}-${p}:1/$alt?content-type=application/json" 

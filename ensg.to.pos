@@ -1,0 +1,4 @@
+#!/bin/bash
+ensg=$1
+wget -O- -q "http://rest.ensembl.org/lookup/id/${ensg}?content-type=application/json"  | jq -r '.seq_region_name +" "+ (.start|tostring)+" "+ (.end|tostring)'
+

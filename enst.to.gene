@@ -1,0 +1,5 @@
+#!/bin/bash
+ensg=$1
+gene=$(wget -O- -q "http://rest.ensembl.org/lookup/id/${ensg}?content-type=application/json"  | jq -r '.Parent')
+/home/agilly/scripts/ensg.to.symbol $gene
+

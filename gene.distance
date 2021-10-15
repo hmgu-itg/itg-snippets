@@ -1,0 +1,18 @@
+#!/bin/bash
+chr=$1
+ps=$2
+s=$(( $ps - 1000000 ))
+e=$(( $ps + 1000000 ))
+
+cat <(wget -q -O- "http://rest.ensembl.org/overlap/region/human/${chr}:${s}-${ps}?feature=gene;content-type=application/json" | jq -r '.[] | .external_name + " " + ( .["start"] | tostring ) + " " + ( .["end"] | tostring )') <(wget -q -O- "http://rest.ensembl.org/overlap/region/human/${chr}:${ps}-${e}?feature=gene;content-type=application/json" | jq -r '.[] | .external_name + " " + ( .["start"] | tostring ) + " " + ( .["end"] | tostring )') | awk '
+  function abs(v) {return v < 0 ? -v : v}
+{
+sta=$2-'$ps'; 
+en=$3-'$ps';
+if(sta<0 && en>0){
+print $1, 0
+}else{
+sta=abs(sta);
+en=abs(en)
+print $1, sta<en ? sta : en;
+}}'

@@ -1,0 +1,24 @@
+#!/bin/bash
+g1=$1
+g2=$2
+
+while [ -z "$c1" ]; do
+read c1 s1 e1 <<< $(get.gene.coords.b38.sh $g1);
+read c2 s2 e2 <<< $(get.gene.coords.b38.sh $g2);
+done
+
+if [ "$c1" -ne "$c2" ]; then 
+ echo -1 different_chromosomes; 
+else
+
+one=$(overlap.gene.b38 ${c1}:${s1}-${e1} | jq -r '.[] |select(.biotype == "protein_coding") |.external_name ' | grep -w $g2| wc -l )
+two=$(overlap.gene.b38 ${c1}:${s2}-${e2} | jq -r '.[] |select(.biotype == "protein_coding") |.external_name ' | grep -w $g1| wc -l )
+
+if [ $one -gt 0 ] || [ $two -gt 0 ]; then
+echo 0 overlapping
+elif [ $e1 -lt $s2 ]; then 
+ echo $(( s2 - e1 )) $(overlap.gene.b38 ${c1}:$(( e1 + 1 ))-$(( s2 - 1 )) | jq -r '[.[] |select(.biotype == "protein_coding") |.external_name ] | join(",")') | awk '{if(NF==1){$2="adjacent"}}1'
+else 
+ echo $(( s1 - e2 )) $(overlap.gene.b38 ${c1}:$(( e2 + 1 ))-$(( s1 - 1 )) | jq -r '[.[] | select(.biotype == "protein_coding") |.external_name ] | join(",")') | awk '{if(NF==1){$2="adjacent"}}1' 
+fi
+fi

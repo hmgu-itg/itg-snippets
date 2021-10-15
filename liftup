@@ -1,0 +1,4 @@
+#!/bin/bash
+c=$1
+p=$2
+/storage/hmgu/software/liftover/liftOver -positions <(echo chr${c}:${p}-${p}) /storage/hmgu/software/liftover/hg19ToHg38.over.chain /dev/stdout /dev/null 2>/dev/null | sed 's/-.*//'

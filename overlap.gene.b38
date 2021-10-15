@@ -1,0 +1,4 @@
+#!/bin/bash
+chr=$1
+wget -O- -q --no-check-certificate "https://rest.ensembl.org/overlap/region/human/${chr}?feature=gene;content-type=application/json"
+

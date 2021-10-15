@@ -1,0 +1,2 @@
+#!/bin/bash
+zgrep -F -w -i $1 /storage/hmgu/referenceData/gene_info/gene_info.human.gz| cut -f5 | fgrep -v '-' | tr '|' '\n'| sort -u | tr '\n' ' ' | sed 's/$/\n/'
